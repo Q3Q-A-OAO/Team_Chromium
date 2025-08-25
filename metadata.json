@@ -1,0 +1,5 @@
+{
+  "name": "MoneyQuest",
+  "description": "An educational platform for students and teachers with gamified learning episodes, progress tracking, and an AI mentor. Features role-based dashboards for students and teachers using a modern, bento-box style interface.",
+  "requestFramePermissions": []
+}
