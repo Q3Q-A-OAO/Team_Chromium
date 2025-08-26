@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
@@ -229,7 +228,7 @@ const ProgressSummary = () => {
                 <div className="flex-1 flex flex-col">
                     <div className="relative flex-grow flex flex-col" ref={gridRef}>
                         {hoveredDay && <Tooltip activity={hoveredDay} position={tooltipPos} />}
-                        <div className="grid grid-cols-7 gap-2 flex-grow" style={{ gridTemplateRows: `auto repeat(${numDateRows}, 1fr)` }}>
+                        <div className="grid grid-cols-7 gap-1.5 flex-grow" style={{ gridTemplateRows: `auto repeat(${numDateRows}, 1fr)` }}>
                              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => 
                                 <div key={day} className="flex items-center justify-center text-center small h-8">{day}</div>
                              )}
@@ -249,7 +248,7 @@ const ProgressSummary = () => {
                                         onFocus={(e) => handleMouseEnter(day, e as any)}
                                         onBlur={() => setHoveredDay(null)}
                                         aria-label={`${day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${attempts} attempts`}
-                                        className={`w-full h-full flex items-center justify-center rounded-xl text-[13px] transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 ${getIntensityClass(attempts)} ${isSelected ? 'ring-2 ring-blue-800 ring-offset-1' : ''}`}
+                                        className={`w-full h-full flex items-center justify-center rounded-xl text-xs transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 ${getIntensityClass(attempts)} ${isSelected ? 'ring-2 ring-blue-800 ring-offset-1' : ''}`}
                                     >
                                         {day.getDate()}
                                     </button>

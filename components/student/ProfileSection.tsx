@@ -2,9 +2,8 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
-import { demoStudent, demoPrefs, progressSummaryData, demoJournalTop3, demoClassActivity, dailyActivity } from '../../lib/demoData';
-import MascotSticker from './MascotSticker';
-import { Camera, Eye } from 'lucide-react';
+import { demoStudent, demoPrefs, demoClassActivity, dailyActivity } from '../../lib/demoData';
+import { Camera } from 'lucide-react';
 
 // Util for GBP currency formatting
 const formatGBP = (amount: number) => {
@@ -15,25 +14,6 @@ const formatGBP = (amount: number) => {
 };
 
 const ProfileSection = () => {
-    // TODO: swap chip badges for square image badges when assets are ready
-
-    // Determine mascot state based on demo data
-    // TODO: add threshold map for celebrations: [£10, £50, £100, £250].
-    const moneySavedHigh = demoStudent.moneySaved >= 100;
-    const hasRecentFail = demoJournalTop3.some(e => e.result === 'Fail' && e.ts.startsWith('Today'));
-    const hasGoodStreak = progressSummaryData.currentStreak >= 7;
-
-    let mascotState: 'default' | 'celebrate' | 'streak' | 'encourage' = 'default';
-    if (moneySavedHigh) {
-        mascotState = 'celebrate';
-    } else if (hasRecentFail) {
-        mascotState = 'encourage';
-    } else if (hasGoodStreak) {
-        mascotState = 'streak';
-    }
-
-    const tickerItems = [...demoClassActivity, ...demoClassActivity]; // Duplicate for seamless loop
-
     const stats = useMemo(() => {
         return {
             episodesCompleted: dailyActivity.reduce((sum, day) => sum + day.pass, 0),
@@ -81,7 +61,9 @@ const ProfileSection = () => {
                 ))}
             </div>
 
-            <div className="border-t border-muted pt-3 mt-4 mb-4">
+            {/* All Stats Grouped */}
+            <div className="mt-4 pt-3 border-t border-muted space-y-3">
+                {/* Totals */}
                 <div className="flex justify-around items-center text-center">
                     <div>
                         <p className="font-bold text-lg text-text">{stats.episodesCompleted}</p>
@@ -96,44 +78,39 @@ const ProfileSection = () => {
                         <p className="text-sm text-subtext">Active days</p>
                     </div>
                 </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
-                    <img src="/assets/placeholders/money-saved-64.png" alt="Money Saved icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
-                    <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                        <p className="font-semibold text-lg text-text">{formatGBP(demoStudent.moneySaved)}</p>
-                        <p className="text-sm text-subtext">Money Saved</p>
+                {/* Metric Tiles */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
+                        <img src="/assets/placeholders/money-saved-64.png" alt="Money Saved icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
+                        <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                            <p className="font-semibold text-lg text-text">{formatGBP(demoStudent.moneySaved)}</p>
+                            <p className="text-sm text-subtext">Money Saved</p>
+                        </div>
                     </div>
-                </div>
-                <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
-                    <img src="/assets/placeholders/class-rank-64.png" alt="Class Rank icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
-                    <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                        <p className="font-semibold text-lg text-text">#{demoStudent.rank}</p>
-                        <p className="text-sm text-subtext">Class rank</p>
+                    <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
+                        <img src="/assets/placeholders/class-rank-64.png" alt="Class Rank icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
+                        <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                            <p className="font-semibold text-lg text-text">#{demoStudent.rank}</p>
+                            <p className="text-sm text-subtext">Class rank</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="h-12 w-full overflow-hidden relative group">
-                <div 
-                    className="absolute top-0 left-0 w-full animate-[vertical-ticker-scroll_12s_linear_infinite] group-hover:[animation-play-state:paused]"
-                >
-                    {tickerItems.map((activity, index) => (
-                        <Link to={activity.link} key={`${activity.id}-${index}`} className="h-12 flex w-full items-center gap-3 rounded-lg transition-colors text-sm">
-                            <img src={activity.avatarUrl} alt={activity.peerName} className="w-8 h-8 rounded-full flex-shrink-0" />
-                            <p className="text-subtext text-left truncate">
-                                <span className="font-semibold text-text">{activity.peerName}</span> {activity.text}
-                            </p>
-                        </Link>
-                    ))}
+            <div className="flex-grow flex flex-col border-t border-muted pt-3 mt-4">
+                <h4 className="font-semibold text-sm text-subtext mb-2 flex-shrink-0">Class Activity</h4>
+                <div className="relative flex-1 group overflow-hidden" aria-live="off">
+                    <div className="absolute top-0 w-full animate-[vertical-ticker-scroll_12s_linear_infinite] group-hover:[animation-play-state:paused]">
+                        {[...demoClassActivity, ...demoClassActivity].map((activity, index) => (
+                            <Link to={activity.link} key={`${activity.id}-${index}`} className="flex w-full items-center gap-3 rounded-lg px-1 h-[40px] text-sm">
+                                <img src={activity.avatarUrl} alt={activity.peerName} className="w-8 h-8 rounded-full flex-shrink-0" />
+                                <p className="text-subtext text-left truncate">
+                                    <span className="font-semibold text-text">{activity.peerName}</span> {activity.text}
+                                </p>
+                            </Link>
+                        ))}
+                    </div>
                 </div>
-            </div>
-            
-            <div className="flex-grow min-h-[4rem] md:min-h-0"></div>
-            
-            <div className="absolute bottom-3 left-3 z-10 transform scale-200 origin-bottom-left">
-                <MascotSticker initialState={mascotState} />
             </div>
         </Card>
     );
