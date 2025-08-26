@@ -12,7 +12,13 @@ export const demoStudent = {
   weeklyGoal: {
     target: 3,
     completed: 2,
-  }
+  },
+  moneySaved: 125.50,
+  rank: 12,
+  socialActivity: {
+      peerName: 'Maria',
+      activity: 'The Stock Market Maze',
+  },
 };
 
 export const demoPrefs = { 
@@ -50,12 +56,16 @@ export const dailyActivity: DailyActivity[] = Array.from({ length: 35 }, (_, i) 
         'Saving': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
     };
 
-    const details = Array.from({ length: attempts }, () => ({
-        episode: ['The Lemonade Stand Challenge', 'Saving for a Spaceship', 'Credit Score Superheroes'][Math.floor(Math.random() * 3)],
-        result: Math.random() > 0.3 ? 'Pass' : 'Fail',
-        time: Math.floor(Math.random() * 10) + 5,
-        concepts: ['Budgeting', 'Profit', 'Saving'].slice(0, Math.floor(Math.random() * 2) + 1)
-    }));
+    const details = Array.from({ length: attempts }, () => {
+        const isFail = Math.random() > 0.4;
+        return {
+            episode: ['The Lemonade Stand Challenge', 'Saving for a Spaceship', 'Credit Score Superheroes'][Math.floor(Math.random() * 3)],
+            result: isFail ? 'Fail' : 'Pass',
+            time: Math.floor(Math.random() * 10) + 5,
+            concepts: ['Budgeting', 'Profit', 'Saving'].slice(0, Math.floor(Math.random() * 2) + 1),
+            reason: isFail && Math.random() > 0.7 ? 'Forgot to account for taxes.' : undefined
+        };
+    });
 
     return { date: dateString, attempts, pass, fail, time, concepts, details };
 }).filter(Boolean) as DailyActivity[];
@@ -73,6 +83,7 @@ export interface DailyActivity {
     result: 'Pass' | 'Fail' | 'In progress';
     time: number;
     concepts: string[];
+    reason?: string;
   }[];
 }
 

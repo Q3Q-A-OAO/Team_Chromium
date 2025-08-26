@@ -20,6 +20,7 @@ const dailyActivity = rawDailyActivity.map(d => {
 const Tooltip = ({ activity, position }: { activity: DailyActivity; position: { top: number; left: number } }) => {
     if (!activity || activity.attempts === 0) return null;
     const conceptEntries = Object.entries(activity.concepts).filter(([, count]) => count > 0);
+    const firstFailReason = activity.details.find(d => d.result === 'Fail' && d.reason)?.reason;
 
     return (
         <div 
@@ -36,6 +37,9 @@ const Tooltip = ({ activity, position }: { activity: DailyActivity; position: { 
                         <p key={concept} className="small text-subtext">{concept} (x{count})</p>
                     ))}
                 </div>
+            )}
+            {firstFailReason && (
+                 <p className="small italic text-subtext mt-1">"{firstFailReason}"</p>
             )}
         </div>
     );
@@ -99,14 +103,28 @@ const MonthSummary = ({ activity }: { activity: DailyActivity[] }) => {
             </div>
 
             <h4 className="font-semibold text-text mb-2">Badges earned</h4>
-            <div className="flex flex-wrap gap-1.5 mb-4 min-h-[52px]">
+            {/* TODO: swap text chips for square badge images when assets are ready. */}
+            <div className="flex flex-wrap items-center gap-2 mb-4 min-h-[68px]">
                 {demoBadgesMonth.length > 0 ? (
                     <>
-                        {demoBadgesMonth.slice(0, 4).map(b => <UIBadge key={b.id} variant="mint">{b.name}</UIBadge>)}
-                        {demoBadgesMonth.length > 4 && <UIBadge variant="muted">+{demoBadgesMonth.length - 4}</UIBadge>}
+                        {demoBadgesMonth.slice(0, 3).map(b => (
+                            <img 
+                                key={b.id} 
+                                src={`https://picsum.photos/seed/${b.id}/64/64`} 
+                                alt={b.name}
+                                title={b.name}
+                                className="w-16 h-16 rounded-lg bg-muted object-cover shadow-sm"
+                            />
+                        ))}
+                        {demoBadgesMonth.length > 3 && (
+                            <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center text-subtext text-lg font-semibold opacity-70 border">
+                                +{demoBadgesMonth.length - 3}
+                            </div>
+                        )}
                     </>
                 ) : <p className="small">No new badges this month.</p>}
             </div>
+
 
             <div className="mt-auto border-t border-muted pt-3">
                 <h4 className="font-semibold text-text mb-3">Totals</h4>
