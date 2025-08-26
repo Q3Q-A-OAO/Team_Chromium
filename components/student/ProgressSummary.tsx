@@ -1,21 +1,11 @@
-
 import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
 import UIBadge from '../ui/Badge';
-import { dailyActivity as rawDailyActivity, progressSummaryData, demoBadgesMonth, allStreaks } from '../../lib/demoData';
+import { dailyActivity, progressSummaryData, demoBadgesMonth, allStreaks } from '../../lib/demoData';
 import type { DailyActivity } from '../../lib/demoData';
 import { Flame, Clock, BookOpen, ArrowRight, ChevronLeft, ChevronRight, Trophy, Eye } from 'lucide-react';
 import Button from '../ui/Button';
-
-// --- DATA TRANSFORMATION ---
-// Remap demo data to be in August 2025 to match the visual spec
-const dailyActivity = rawDailyActivity.map(d => {
-    const activityDate = new Date(d.date);
-    const dayOfMonth = activityDate.getDate(); // Use day of the month as an offset
-    const newDate = new Date(2025, 7, dayOfMonth); // August is month 7
-    return { ...d, date: newDate.toISOString().split('T')[0] };
-});
 
 // --- HELPER FUNCTIONS & COMPONENTS ---
 
@@ -173,11 +163,12 @@ const DayDetail = ({ activity }: { activity: DailyActivity }) => {
 // --- MAIN COMPONENT ---
 
 const ProgressSummary = () => {
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 7, 1));
+    const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 1)); // October 2025
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [hoveredDay, setHoveredDay] = useState<DailyActivity | null>(null);
     const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
     const gridRef = useRef<HTMLDivElement>(null);
+    const TODAY = new Date(2025, 9, 31); // Friday, Oct 31, 2025 is "today"
 
     const activityMap = useMemo(() => new Map(dailyActivity.map(d => [d.date, d])), []);
     const calendarGrid = useMemo(() => generateMonthGrid(currentDate), [currentDate]);
@@ -237,6 +228,12 @@ const ProgressSummary = () => {
                              )}
                             {calendarGrid.map((day, index) => {
                                 if (!day) return <div key={`empty-${index}`} />;
+
+                                const isFuture = day > TODAY;
+                                if (isFuture) {
+                                    return <div key={`future-${index}`} className="w-full h-full rounded-xl bg-muted/30" />;
+                                }
+
                                 const dateStr = day.toISOString().split('T')[0];
                                 const activity = activityMap.get(dateStr);
                                 const isSelected = selectedDay === dateStr;

@@ -1,24 +1,24 @@
-
 import type { Badge as BadgeSummary, Streak, Badge } from '../types';
 
 // --- HELPERS FOR DYNAMIC DATES ---
-const today = new Date();
+const TODAY = new Date(2025, 9, 31); // Friday, Oct 31, 2025 is our new "today"
 
-// Returns an ISO string for a date a few days ago in the current month
+// Returns an ISO string for a date relative to our fixed "today"
 const dateThisMonth = (daysAgo: number) => {
-    const d = new Date();
-    d.setDate(today.getDate() - daysAgo);
+    const d = new Date(TODAY);
+    d.setDate(TODAY.getDate() - daysAgo);
     return d.toISOString();
 }
 
-// Returns an ISO string for a date in the previous month
+// Returns an ISO string for a date in the previous month relative to "today"
 const dateLastMonth = (daysAgo: number) => {
-    const d = new Date();
-    d.setMonth(today.getMonth() - 1);
+    const d = new Date(TODAY);
+    d.setMonth(TODAY.getMonth() - 1);
     // Adjust day to be "daysAgo" from a similar day in the last month
-    d.setDate(today.getDate() - daysAgo); 
+    d.setDate(TODAY.getDate() - daysAgo); 
     return d.toISOString();
 }
+
 
 export const demoStudent = { 
   name:'Alex Johnson', 
@@ -54,49 +54,6 @@ export const progressSummaryData = {
     longestStreak: 21,
 };
 
-export const dailyActivity: DailyActivity[] = Array.from({ length: 35 }, (_, i) => {
-    const day = i - 7; // Start from a week ago
-    const date = new Date();
-    date.setDate(date.getDate() + day);
-    const dateString = date.toISOString().split('T')[0];
-
-    const shouldHaveActivity = Math.random() > 0.4;
-    if (!shouldHaveActivity) {
-        return { date: dateString, attempts: 0, pass: 0, fail: 0, time: 0, concepts: {}, details: [] };
-    }
-
-    const attempts = Math.floor(Math.random() * 5) + 1;
-    const pass = Math.floor(Math.random() * (attempts + 1));
-    const fail = attempts - pass;
-    const time = attempts * (Math.floor(Math.random() * 10) + 5);
-
-    const concepts = {
-        'Budgeting': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
-        'Inflation': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
-        'Saving': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
-    };
-
-    const details = Array.from({ length: attempts }, () => {
-        const isFail = Math.random() > 0.4;
-        const reasons = [
-            'Forgot to account for taxes.',
-            'Miscalculated profit margins.',
-            'Overlooked variable costs.',
-            'Ran out of stock too early.',
-        ];
-        return {
-            episode: ['The Lemonade Stand Challenge', 'Saving for a Spaceship', 'Credit Score Superheroes'][Math.floor(Math.random() * 3)],
-            result: isFail ? 'Fail' : 'Pass',
-            time: Math.floor(Math.random() * 10) + 5,
-            concepts: ['Budgeting', 'Profit', 'Saving'].slice(0, Math.floor(Math.random() * 2) + 1),
-            reason: isFail && Math.random() > 0.7 ? reasons[Math.floor(Math.random() * reasons.length)] : undefined,
-        };
-    });
-
-    return { date: dateString, attempts, pass, fail, time, concepts, details };
-}).filter(Boolean) as DailyActivity[];
-
-
 export interface DailyActivity {
   date: string; // YYYY-MM-DD
   attempts: number;
@@ -112,6 +69,71 @@ export interface DailyActivity {
     reason?: string;
   }[];
 }
+
+export const dailyActivity: DailyActivity[] = (() => {
+    const activities: DailyActivity[] = [];
+    // Generate for a range around October 2025
+    const startDate = new Date(2025, 8, 1); // Start from Sep 1st
+    const endDate = new Date(2025, 10, 15); // End mid-November
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dateString = d.toISOString().split('T')[0];
+
+        // No activity for future dates
+        if (d > TODAY) {
+            activities.push({ date: dateString, attempts: 0, pass: 0, fail: 0, time: 0, concepts: {}, details: [] });
+            continue;
+        }
+
+        let hasActivity = false;
+        const daysFromToday = Math.round((TODAY.getTime() - d.getTime()) / (1000 * 3600 * 24));
+
+        // Current 12-day streak up to and including TODAY
+        if (daysFromToday >= 0 && daysFromToday < 12) {
+            hasActivity = true;
+        } else {
+            // Sparse activity before the streak to make it feel earned
+            hasActivity = Math.random() > 0.7; // ~30% chance of activity on other days
+        }
+
+        if (!hasActivity) {
+            activities.push({ date: dateString, attempts: 0, pass: 0, fail: 0, time: 0, concepts: {}, details: [] });
+            continue;
+        }
+
+        // Generate random activity details (adapted from original)
+        const attempts = Math.floor(Math.random() * 3) + 1; // a bit less frantic
+        const pass = Math.floor(Math.random() * (attempts + 1));
+        const fail = attempts - pass;
+        const time = attempts * (Math.floor(Math.random() * 10) + 5);
+
+        const concepts = {
+            'Budgeting': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
+            'Inflation': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
+            'Saving': Math.random() > 0.5 ? Math.floor(Math.random() * 3) : 0,
+        };
+
+        const details = Array.from({ length: attempts }, () => {
+            const isFail = Math.random() > 0.4;
+            const reasons = [
+                'Forgot to account for taxes.',
+                'Miscalculated profit margins.',
+                'Overlooked variable costs.',
+                'Ran out of stock too early.',
+            ];
+            return {
+                episode: ['The Lemonade Stand Challenge', 'Saving for a Spaceship', 'Credit Score Superheroes'][Math.floor(Math.random() * 3)],
+                result: isFail ? 'Fail' : 'Pass',
+                time: Math.floor(Math.random() * 10) + 5,
+                concepts: ['Budgeting', 'Profit', 'Saving'].slice(0, Math.floor(Math.random() * 2) + 1),
+                reason: isFail && Math.random() > 0.7 ? reasons[Math.floor(Math.random() * reasons.length)] : undefined,
+            };
+        });
+
+        activities.push({ date: dateString, attempts, pass, fail, time, concepts, details: details as any });
+    }
+    return activities;
+})();
 
 
 export const demoBadgesSummary: Pick<BadgeSummary, 'id' | 'name'>[] = [
