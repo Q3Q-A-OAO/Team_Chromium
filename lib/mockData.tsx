@@ -1,9 +1,10 @@
-
 import React from 'react';
-import type { Student, Badge, Episode, Attempt } from '../types';
+// FIX: Import BadgeSummary instead of Badge for the old badge data structure.
+import type { Student, BadgeSummary, Episode, Attempt } from '../types';
 import { BrainCircuit, Zap, Flame } from 'lucide-react';
 
-export const badges: Badge[] = [
+// FIX: The `badges` array matches the `BadgeSummary` interface, not the new `Badge` interface.
+export const badges: BadgeSummary[] = [
   { id: 'b1', name: 'Budgeting Basics', icon: <BrainCircuit size={16} />, type: 'concept' },
   { id: 'b2', name: 'Quick Learner', icon: <Zap size={16} />, type: 'effort' },
   { id: 'b3', name: '7-Day Streak', icon: <Flame size={16} />, type: 'streak' },

@@ -1,8 +1,9 @@
+
 import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
 import UIBadge from '../ui/Badge';
-import { dailyActivity as rawDailyActivity, progressSummaryData, demoBadgesMonth } from '../../lib/demoData';
+import { dailyActivity as rawDailyActivity, progressSummaryData, demoBadgesMonth, allStreaks } from '../../lib/demoData';
 import type { DailyActivity } from '../../lib/demoData';
 import { Flame, Clock, BookOpen, ArrowRight, ChevronLeft, ChevronRight, Trophy, Eye } from 'lucide-react';
 import Button from '../ui/Button';
@@ -77,7 +78,8 @@ const generateMonthGrid = (date: Date) => {
 // --- RIGHT PANEL COMPONENTS ---
 
 const MonthSummary = ({ activity }: { activity: DailyActivity[] }) => {
-    const badgesToShow = demoBadgesMonth.slice(0, 3);
+    const badgesToShow = demoBadgesMonth;
+    const mainStreak = allStreaks[0]; // Daily Play Streak
 
     return (
         <div className="flex flex-col h-full py-3">
@@ -86,14 +88,14 @@ const MonthSummary = ({ activity }: { activity: DailyActivity[] }) => {
                 <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-sm">
                     <Flame className="text-orange-500" size={20} />
                     <div>
-                        <p className="font-bold text-lg">{progressSummaryData.currentStreak}</p>
-                        <p className="text-xs text-subtext">Current streak</p>
+                        <p className="font-bold text-lg">{mainStreak.currentCount}</p>
+                        <p className="text-xs text-subtext capitalize">{mainStreak.name}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-sm">
                     <Trophy className="text-subtext" size={20} />
                     <div>
-                        <p className="font-bold text-lg">{progressSummaryData.longestStreak}</p>
+                        <p className="font-bold text-lg">{mainStreak.bestCount}</p>
                         <p className="text-xs text-subtext">Longest streak</p>
                     </div>
                 </div>
@@ -101,8 +103,9 @@ const MonthSummary = ({ activity }: { activity: DailyActivity[] }) => {
 
             <div className="flex justify-between items-center mb-2">
                 <h4 className="font-semibold text-text">Badges earned</h4>
-                {/* Fix: Use the new 'size' prop and remove redundant className. */}
-                <Button variant="ghost" size="sm">View all</Button>
+                <Link to="/student/achievements">
+                    <Button variant="ghost" size="sm">View all</Button>
+                </Link>
             </div>
              <div className="flex items-start gap-4 mb-4">
                 {badgesToShow.map(badge => (
@@ -116,7 +119,7 @@ const MonthSummary = ({ activity }: { activity: DailyActivity[] }) => {
                             className="w-14 h-14 rounded-full mx-auto bg-muted object-cover shadow-sm ring-2 ring-surface transition-transform group-hover:scale-110" 
                         />
                         <p className="text-[11px] font-medium leading-tight text-text mt-1.5 truncate">{badge.name}</p>
-                        <p className="text-[11px] leading-tight text-subtext">{new Date(badge.earnedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                        <p className="text-[11px] leading-tight text-subtext">{new Date(badge.earnedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
                     </div>
                 ))}
             </div>

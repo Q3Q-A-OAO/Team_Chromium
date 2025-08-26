@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
@@ -61,54 +60,56 @@ const ProfileSection = () => {
                 ))}
             </div>
 
-            {/* All Stats Grouped */}
-            <div className="mt-4 pt-3 border-t border-muted space-y-3">
-                {/* Totals */}
-                <div className="flex justify-around items-center text-center">
-                    <div>
-                        <p className="font-bold text-lg text-text">{stats.episodesCompleted}</p>
-                        <p className="text-sm text-subtext">Episodes passed</p>
-                    </div>
-                    <div>
-                        <p className="font-bold text-lg text-text">{Math.floor(stats.timeSpent / 60)}h {stats.timeSpent % 60}m</p>
-                        <p className="text-sm text-subtext">Time spent</p>
-                    </div>
-                    <div>
-                        <p className="font-bold text-lg text-text">{stats.activeDays}</p>
-                        <p className="text-sm text-subtext">Active days</p>
-                    </div>
-                </div>
-                {/* Metric Tiles */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
-                        <img src="/assets/placeholders/money-saved-64.png" alt="Money Saved icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
-                        <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                            <p className="font-semibold text-lg text-text">{formatGBP(demoStudent.moneySaved)}</p>
-                            <p className="text-sm text-subtext">Money Saved</p>
+            {/* Consolidated Stats & Activity Block */}
+            <div className="flex-grow flex flex-col pt-4 mt-4 border-t border-muted">
+                {/* Stats */}
+                <div className="space-y-4 mb-4">
+                    <div className="flex justify-around items-center text-center">
+                        <div>
+                            <p className="font-bold text-lg text-text">{stats.episodesCompleted}</p>
+                            <p className="text-sm text-subtext">Episodes passed</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-lg text-text">{Math.floor(stats.timeSpent / 60)}h {stats.timeSpent % 60}m</p>
+                            <p className="text-sm text-subtext">Time spent</p>
+                        </div>
+                        <div>
+                            <p className="font-bold text-lg text-text">{stats.activeDays}</p>
+                            <p className="text-sm text-subtext">Active days</p>
                         </div>
                     </div>
-                    <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
-                        <img src="/assets/placeholders/class-rank-64.png" alt="Class Rank icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
-                        <div className="flex items-baseline gap-1.5 whitespace-nowrap">
-                            <p className="font-semibold text-lg text-text">#{demoStudent.rank}</p>
-                            <p className="text-sm text-subtext">Class rank</p>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
+                            <img src="/assets/placeholders/money-saved-64.png" alt="Money Saved icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
+                            <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                                <p className="font-semibold text-lg text-text">{formatGBP(demoStudent.moneySaved)}</p>
+                                <p className="text-sm text-subtext">Money Saved</p>
+                            </div>
+                        </div>
+                        <div className="bg-muted p-3 rounded-xl border flex flex-col items-center justify-center gap-2 shadow-sm">
+                            <img src="/assets/placeholders/class-rank-64.png" alt="Class Rank icon" className="w-12 h-12 rounded-md bg-white object-contain p-1" />
+                            <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                                <p className="font-semibold text-lg text-text">#{demoStudent.rank}</p>
+                                <p className="text-sm text-subtext">Class rank</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex-grow flex flex-col border-t border-muted pt-3 mt-4">
-                <h4 className="font-semibold text-sm text-subtext mb-2 flex-shrink-0">Class Activity</h4>
-                <div className="relative flex-1 group overflow-hidden" aria-live="off">
-                    <div className="absolute top-0 w-full animate-[vertical-ticker-scroll_12s_linear_infinite] group-hover:[animation-play-state:paused]">
-                        {[...demoClassActivity, ...demoClassActivity].map((activity, index) => (
-                            <Link to={activity.link} key={`${activity.id}-${index}`} className="flex w-full items-center gap-3 rounded-lg px-1 h-[40px] text-sm">
-                                <img src={activity.avatarUrl} alt={activity.peerName} className="w-8 h-8 rounded-full flex-shrink-0" />
-                                <p className="text-subtext text-left truncate">
-                                    <span className="font-semibold text-text">{activity.peerName}</span> {activity.text}
-                                </p>
-                            </Link>
-                        ))}
+                {/* Activity Ticker - Flex container ensures title and ticker are separate */}
+                <div className="flex-grow flex flex-col border-t border-muted pt-3">
+                    <h4 className="font-semibold text-sm text-subtext mb-2 flex-shrink-0">Class Activity</h4>
+                    <div className="relative flex-1 group overflow-hidden" aria-live="off">
+                        <div className="absolute top-0 w-full animate-[vertical-ticker-scroll_12s_linear_infinite] group-hover:[animation-play-state:paused]">
+                            {[...demoClassActivity, ...demoClassActivity].map((activity, index) => (
+                                <Link to={activity.link} key={`${activity.id}-${index}`} className="flex w-full items-center gap-3 rounded-lg px-1 h-[40px] text-sm">
+                                    <img src={activity.avatarUrl} alt={activity.peerName} className="w-8 h-8 rounded-full flex-shrink-0" />
+                                    <p className="text-subtext text-left truncate">
+                                        <span className="font-semibold text-text">{activity.peerName}</span> {activity.text}
+                                    </p>
+                                </Link>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
