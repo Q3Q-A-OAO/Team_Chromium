@@ -95,6 +95,24 @@ html, body {
   .aurora::before{ animation: none; }
 }
 
+@keyframes vertical-ticker-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes mascot-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(6px) scale(1.03);
+  }
+}
+
 @layer utilities {
   .h1 {
     @apply text-h1 font-semibold -tracking-[0.02em];

@@ -76,10 +76,10 @@ const MascotSticker: React.FC<MascotStickerProps> = ({ initialState = 'default',
     
     return (
         <div 
-            className={`w-24 h-24 md:w-32 md:h-32 pointer-events-none motion-safe:transition-transform motion-safe:duration-500 ${state !== 'default' ? 'motion-safe:scale-110' : ''} ${className}`} 
+            className={`w-24 h-24 pointer-events-none motion-safe:transition-transform motion-safe:duration-500 ${state !== 'default' ? 'motion-safe:scale-110' : ''} ${className}`} 
             aria-hidden="true"
         >
-            <div className="motion-reduce:hidden">
+            <div className={`motion-reduce:hidden ${state === 'default' ? 'motion-safe:animate-[mascot-float_3s_ease-in-out_infinite]' : ''}`}>
                 {renderMascot()}
             </div>
              <div className="hidden motion-reduce:block">

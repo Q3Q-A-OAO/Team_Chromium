@@ -1,3 +1,4 @@
+
 import type { Badge } from '../types';
 
 export const demoStudent = { 
@@ -58,12 +59,18 @@ export const dailyActivity: DailyActivity[] = Array.from({ length: 35 }, (_, i) 
 
     const details = Array.from({ length: attempts }, () => {
         const isFail = Math.random() > 0.4;
+        const reasons = [
+            'Forgot to account for taxes.',
+            'Miscalculated profit margins.',
+            'Overlooked variable costs.',
+            'Ran out of stock too early.',
+        ];
         return {
             episode: ['The Lemonade Stand Challenge', 'Saving for a Spaceship', 'Credit Score Superheroes'][Math.floor(Math.random() * 3)],
             result: isFail ? 'Fail' : 'Pass',
             time: Math.floor(Math.random() * 10) + 5,
             concepts: ['Budgeting', 'Profit', 'Saving'].slice(0, Math.floor(Math.random() * 2) + 1),
-            reason: isFail && Math.random() > 0.7 ? 'Forgot to account for taxes.' : undefined
+            reason: isFail && Math.random() > 0.7 ? reasons[Math.floor(Math.random() * reasons.length)] : undefined,
         };
     });
 
@@ -92,16 +99,22 @@ export const demoBadgesWeek: Pick<Badge, 'id' | 'name'>[] = [
   {id:'inflation-explorer', name:'Inflation Explorer'}
 ];
 
-export const demoBadgesMonth: Pick<Badge, 'id' | 'name'>[] = [
-  {id:'inflation-explorer', name:'Inflation Explorer'},
-  {id:'savvy-saver', name:'Savvy Saver'},
-  {id:'budget-boss', name:'Budget Boss'},
-  {id:'quick-learner', name:'Quick Learner'},
-  {id:'data-diver', name:'Data Diver'},
+export const demoBadgesMonth: { id: string; name: string; earnedDate: string; }[] = [
+  {id:'inflation-explorer', name:'Inflation Explorer', earnedDate: '2025-08-12'},
+  {id:'savvy-saver', name:'Savvy Saver', earnedDate: '2025-08-19'},
+  {id:'budget-boss', name:'Budget Boss', earnedDate: '2025-08-05'},
+  {id:'quick-learner', name:'Quick Learner', earnedDate: '2025-08-22'},
+  {id:'data-diver', name:'Data Diver', earnedDate: '2025-08-15'},
 ];
 
 export const demoJournalTop3 = [
   { id:'a1', episode:'The Lemonade Stand Challenge', result:'Pass', summary:'Successfully balanced budget and made a small profit.', ts:'Today 16:02' },
   { id:'a2', episode:'Saving for a Spaceship', result:'Fail', summary:'Failed this attempt by overspending on rocket fuel. Next time, I need to adjust my savings plan first.', ts:'Today 15:10' },
   { id:'a3', episode:'The Lemonade Stand Challenge', result:'Fail', summary:'Failed because I ran out of lemons too early. This taught me a lesson about supply management.', ts:'Yesterday' },
+];
+
+export const demoClassActivity = [
+    { id: 'ca1', peerName: 'Maria', avatarUrl: 'https://picsum.photos/seed/maria/40/40', text: 'is learning "The Stock Market Maze"', link: '/student/play' },
+    { id: 'ca2', peerName: 'Sam', avatarUrl: 'https://picsum.photos/seed/sam/40/40', text: 'just earned "Budget Boss"', link: '/student/achievements' },
+    { id: 'ca3', peerName: 'Ava', avatarUrl: 'https://picsum.photos/seed/ava/40/40', text: 'continued a 10-day streak', link: '/student/dashboard' },
 ];

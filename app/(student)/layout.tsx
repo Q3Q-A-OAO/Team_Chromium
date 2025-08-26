@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from '../../components/shared/Header';
@@ -17,7 +18,7 @@ const StudentLayout: React.FC = () => {
     <div className="min-h-screen">
       <Header role={Role.STUDENT} />
       <NavTabs tabs={studentNavItems} />
-      <main className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-8 md:py-8">
+      <main className="mx-auto w-full max-w-[1400px] px-4 py-4 md:px-8">
         <Outlet />
       </main>
     </div>

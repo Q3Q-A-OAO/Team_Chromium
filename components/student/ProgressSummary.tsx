@@ -1,10 +1,12 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+
+import React, { useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../ui/Card';
 import UIBadge from '../ui/Badge';
 import { dailyActivity as rawDailyActivity, progressSummaryData, demoBadgesMonth } from '../../lib/demoData';
 import type { DailyActivity } from '../../lib/demoData';
-import { Flame, Clock, BookOpen, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flame, Clock, BookOpen, ArrowRight, ChevronLeft, ChevronRight, Trophy, Eye } from 'lucide-react';
+import Button from '../ui/Button';
 
 // --- DATA TRANSFORMATION ---
 // Remap demo data to be in August 2025 to match the visual spec
@@ -20,11 +22,10 @@ const dailyActivity = rawDailyActivity.map(d => {
 const Tooltip = ({ activity, position }: { activity: DailyActivity; position: { top: number; left: number } }) => {
     if (!activity || activity.attempts === 0) return null;
     const conceptEntries = Object.entries(activity.concepts).filter(([, count]) => count > 0);
-    const firstFailReason = activity.details.find(d => d.result === 'Fail' && d.reason)?.reason;
-
+    
     return (
         <div 
-            className="absolute z-10 w-48 rounded-md bg-surface p-3 shadow-soft ring-1 ring-blue800/50 text-left pointer-events-none"
+            className="absolute z-10 w-64 rounded-md bg-surface p-3 shadow-soft ring-1 ring-blue800/50 text-left pointer-events-none"
             style={{ top: position.top, left: position.left, transform: 'translate(-50%, calc(-100% - 8px))' }}
         >
             <p className="font-semibold text-sm text-text">{new Date(activity.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
@@ -32,24 +33,27 @@ const Tooltip = ({ activity, position }: { activity: DailyActivity; position: { 
             <p className="small">Time: {activity.time}m</p>
             {conceptEntries.length > 0 && (
                 <div className="mt-2 pt-2 border-t border-muted">
-                    <p className="small font-semibold text-text mb-1">Concepts Covered:</p>
+                    <p className="small font-semibold text-text mb-1">Concepts covered:</p>
                     {conceptEntries.map(([concept, count]) => (
                         <p key={concept} className="small text-subtext">{concept} (x{count})</p>
                     ))}
                 </div>
             )}
-            {firstFailReason && (
-                 <p className="small italic text-subtext mt-1">"{firstFailReason}"</p>
-            )}
+             {activity.details[0]?.reason && (
+                <div className="mt-2 pt-2 border-t border-muted">
+                    <p className="small font-semibold text-text mb-1">Note:</p>
+                    <p className="small text-subtext">{activity.details[0].reason}</p>
+                </div>
+             )}
         </div>
     );
 };
 
 const getIntensityClass = (attempts: number) => {
-    if (attempts === 0) return 'bg-muted/50';
-    if (attempts <= 2) return 'bg-[#d6e9fb]';
-    if (attempts <= 4) return 'bg-[#a9d2f5]';
-    if (attempts <= 6) return 'bg-[#6bb5ea]';
+    if (attempts === 0) return 'bg-[#E8F3FF] ring-1 ring-inset ring-slate-200/75 shadow-inner';
+    if (attempts <= 1) return 'bg-[#d6e9fb]';
+    if (attempts <= 3) return 'bg-[#a9d2f5]';
+    if (attempts <= 5) return 'bg-[#6bb5ea]';
     return 'bg-[#338aca]';
 };
 
@@ -74,74 +78,53 @@ const generateMonthGrid = (date: Date) => {
 // --- RIGHT PANEL COMPONENTS ---
 
 const MonthSummary = ({ activity }: { activity: DailyActivity[] }) => {
-    const stats = useMemo(() => {
-        return {
-            episodesCompleted: activity.reduce((sum, day) => sum + day.pass, 0),
-            timeSpent: activity.reduce((sum, day) => sum + day.time, 0),
-            activeDays: activity.filter(day => day.attempts > 0).length
-        };
-    }, [activity]);
+    const badgesToShow = demoBadgesMonth.slice(0, 3);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full py-3">
             <h4 className="font-semibold text-text mb-3">This Month</h4>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="flex items-center gap-2 p-3 rounded-md bg-muted">
-                    <Flame className="text-orange-500" size={24} />
+            <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-sm">
+                    <Flame className="text-orange-500" size={20} />
                     <div>
-                        <p className="font-bold text-xl">{progressSummaryData.currentStreak}</p>
+                        <p className="font-bold text-lg">{progressSummaryData.currentStreak}</p>
                         <p className="text-xs text-subtext">Current streak</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 p-3 rounded-md bg-muted">
-                    <Flame className="text-subtext" size={24} />
+                <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-sm">
+                    <Trophy className="text-subtext" size={20} />
                     <div>
-                        <p className="font-bold text-xl">{progressSummaryData.longestStreak}</p>
+                        <p className="font-bold text-lg">{progressSummaryData.longestStreak}</p>
                         <p className="text-xs text-subtext">Longest streak</p>
                     </div>
                 </div>
             </div>
 
-            <h4 className="font-semibold text-text mb-2">Badges earned</h4>
-            {/* TODO: swap text chips for square badge images when assets are ready. */}
-            <div className="flex flex-wrap items-center gap-2 mb-4 min-h-[68px]">
-                {demoBadgesMonth.length > 0 ? (
-                    <>
-                        {demoBadgesMonth.slice(0, 3).map(b => (
-                            <img 
-                                key={b.id} 
-                                src={`https://picsum.photos/seed/${b.id}/64/64`} 
-                                alt={b.name}
-                                title={b.name}
-                                className="w-16 h-16 rounded-lg bg-muted object-cover shadow-sm"
-                            />
-                        ))}
-                        {demoBadgesMonth.length > 3 && (
-                            <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center text-subtext text-lg font-semibold opacity-70 border">
-                                +{demoBadgesMonth.length - 3}
-                            </div>
-                        )}
-                    </>
-                ) : <p className="small">No new badges this month.</p>}
+            <div className="flex justify-between items-center mb-2">
+                <h4 className="font-semibold text-text">Badges earned</h4>
+                {/* Fix: Use the new 'size' prop and remove redundant className. */}
+                <Button variant="ghost" size="sm">View all</Button>
+            </div>
+             <div className="flex items-start gap-4 mb-4">
+                {badgesToShow.map(badge => (
+                    <div 
+                        key={badge.id} 
+                        className="text-center group flex-1" 
+                    >
+                        <img 
+                            src={`https://picsum.photos/seed/${badge.id}/64/64`} 
+                            alt={badge.name} 
+                            className="w-14 h-14 rounded-full mx-auto bg-muted object-cover shadow-sm ring-2 ring-surface transition-transform group-hover:scale-110" 
+                        />
+                        <p className="text-[11px] font-medium leading-tight text-text mt-1.5 truncate">{badge.name}</p>
+                        <p className="text-[11px] leading-tight text-subtext">{new Date(badge.earnedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                    </div>
+                ))}
             </div>
 
 
-            <div className="mt-auto border-t border-muted pt-3">
-                <h4 className="font-semibold text-text mb-3">Totals</h4>
-                <div className="flex justify-between items-center">
-                    <div className="text-center">
-                        <p className="font-bold text-xl text-text">{stats.episodesCompleted}</p>
-                        <p className="small">Episodes passed</p>
-                    </div>
-                     <div className="text-center">
-                        <p className="font-bold text-xl text-text">{Math.floor(stats.timeSpent / 60)}h {stats.timeSpent % 60}m</p>
-                        <p className="small">Time spent</p>
-                    </div>
-                     <div className="text-center">
-                        <p className="font-bold text-xl text-text">{stats.activeDays}</p>
-                        <p className="small">Active days</p>
-                    </div>
-                </div>
+            <div className="mt-auto">
+                {/* Totals section moved to ProfileSection.tsx */}
             </div>
         </div>
     );
@@ -193,7 +176,6 @@ const ProgressSummary = () => {
     const [hoveredDay, setHoveredDay] = useState<DailyActivity | null>(null);
     const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
     const gridRef = useRef<HTMLDivElement>(null);
-    const dayRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
     const activityMap = useMemo(() => new Map(dailyActivity.map(d => [d.date, d])), []);
     const calendarGrid = useMemo(() => generateMonthGrid(currentDate), [currentDate]);
@@ -206,6 +188,8 @@ const ProgressSummary = () => {
 
     const selectedDayActivity = selectedDay ? activityMap.get(selectedDay) : null;
     
+    const numDateRows = Math.ceil(calendarGrid.length / 7);
+
     const handleMonthChange = (direction: 'prev' | 'next') => {
         setCurrentDate(prev => {
             const newDate = new Date(prev);
@@ -231,8 +215,8 @@ const ProgressSummary = () => {
     };
 
     return (
-        <Card className="p-4 md:p-5">
-            <header className="flex justify-between items-center mb-4">
+        <Card className="p-5 h-full flex flex-col">
+            <header className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-semibold">Progress — {monthName}</h3>
                 <div className="flex items-center gap-2">
                     <button onClick={() => handleMonthChange('prev')} className="p-1 text-subtext hover:text-text disabled:opacity-50" aria-label="Previous month"><ChevronLeft size={20}/></button>
@@ -240,54 +224,55 @@ const ProgressSummary = () => {
                 </div>
             </header>
             
-            <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+            <div className="flex flex-row gap-6 md:gap-8 flex-grow min-h-0">
                 {/* Left Panel: Calendar */}
-                <div className="flex-grow">
-                    <div className="relative" ref={gridRef}>
+                <div className="flex-1 flex flex-col">
+                    <div className="relative flex-grow flex flex-col" ref={gridRef}>
                         {hoveredDay && <Tooltip activity={hoveredDay} position={tooltipPos} />}
-                        <div className="grid grid-cols-7 gap-x-2 text-center small mb-2">
-                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => <div key={day}>{day}</div>)}
-                        </div>
-                        <div className="grid grid-cols-7 gap-1">
+                        <div className="grid grid-cols-7 gap-2 flex-grow" style={{ gridTemplateRows: `auto repeat(${numDateRows}, 1fr)` }}>
+                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => 
+                                <div key={day} className="flex items-center justify-center text-center small h-8">{day}</div>
+                             )}
                             {calendarGrid.map((day, index) => {
                                 if (!day) return <div key={`empty-${index}`} />;
                                 const dateStr = day.toISOString().split('T')[0];
                                 const activity = activityMap.get(dateStr);
                                 const isSelected = selectedDay === dateStr;
                                 const attempts = activity?.attempts || 0;
-                                const ariaLabel = `${day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${attempts} attempts${attempts > 0 ? ` (${activity?.pass} pass, ${activity?.fail} fail), ${activity?.time} minutes.` : '.'}`;
-                                
+
                                 return (
                                     <button
                                         key={dateStr}
-                                        ref={el => { dayRefs.current[dateStr] = el; }}
                                         onClick={() => setSelectedDay(isSelected ? null : dateStr)}
                                         onMouseEnter={(e) => handleMouseEnter(day, e)}
                                         onMouseLeave={() => setHoveredDay(null)}
                                         onFocus={(e) => handleMouseEnter(day, e as any)}
                                         onBlur={() => setHoveredDay(null)}
-                                        aria-label={ariaLabel}
-                                        className={`aspect-square w-full rounded-md text-sm transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 ${getIntensityClass(attempts)} ${isSelected ? 'ring-2 ring-blue-800 ring-offset-1' : ''}`}
+                                        aria-label={`${day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${attempts} attempts`}
+                                        className={`w-full h-full flex items-center justify-center rounded-xl text-[13px] transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 ${getIntensityClass(attempts)} ${isSelected ? 'ring-2 ring-blue-800 ring-offset-1' : ''}`}
                                     >
                                         {day.getDate()}
                                     </button>
                                 );
                             })}
                         </div>
-                    </div>
-                     <div className="flex items-center justify-center gap-2 mt-3 small">
-                        <span>Low</span>
-                        <div className="w-4 h-4 rounded-sm bg-muted/50" />
-                        <div className="w-4 h-4 rounded-sm bg-[#d6e9fb]" />
-                        <div className="w-4 h-4 rounded-sm bg-[#a9d2f5]" />
-                        <div className="w-4 h-4 rounded-sm bg-[#6bb5ea]" />
-                        <div className="w-4 h-4 rounded-sm bg-[#338aca]" />
-                        <span>High</span>
+                        <div className="flex items-center justify-center gap-3 mt-2 text-xs text-subtext shrink-0">
+                            <span>Activity level (attempts/day)</span>
+                            <div className="flex items-center gap-1.5">
+                                <span>Low</span>
+                                <div title="0 attempts" className="w-3.5 h-3.5 rounded-sm bg-[#E8F3FF] ring-1 ring-inset ring-slate-200" />
+                                <div title="1 attempt" className="w-3.5 h-3.5 rounded-sm bg-[#d6e9fb]" />
+                                <div title="2-3 attempts" className="w-3.5 h-3.5 rounded-sm bg-[#a9d2f5]" />
+                                <div title="4-5 attempts" className="w-3.5 h-3.5 rounded-sm bg-[#6bb5ea]" />
+                                <div title="6+ attempts" className="w-3.5 h-3.5 rounded-sm bg-[#338aca]" />
+                                <span>High</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Right Panel: Summary/Details */}
-                <div className="md:w-[340px] flex-shrink-0 md:border-l md:pl-6 lg:pl-8 border-muted min-h-[300px]">
+                <div className="w-full basis-full md:w-auto md:basis-[320px] flex-shrink-0 md:border-l md:pl-6 lg:pl-8 border-muted">
                     {selectedDayActivity && selectedDayActivity.attempts > 0
                         ? <DayDetail activity={selectedDayActivity} />
                         : <MonthSummary activity={activityForMonth} />
