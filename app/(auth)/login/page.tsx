@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Role } from '../../../lib/roles';
@@ -12,7 +13,7 @@ const LoginPage: React.FC = () => {
     // For this skeleton, we'll just set the role in localStorage.
     localStorage.setItem('userRole', role);
     window.dispatchEvent(new Event("storage")); // Notify App.tsx of role change
-    navigate(`/${role}/dashboard`);
+    navigate(role === Role.STUDENT ? '/student/play' : '/teacher/dashboard');
   };
 
   return (

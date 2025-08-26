@@ -68,7 +68,7 @@ export default function App() {
             <Route path="play" element={<StudentPlay />} />
             <Route path="journal" element={<StudentJournal />} />
             <Route path="mentor" element={<StudentMentor />} />
-            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route index element={<Navigate to="play" replace />} />
           </Route>
         </Route>
 
@@ -84,7 +84,7 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to={role ? `/${role}/dashboard` : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={role === Role.STUDENT ? '/student/play' : (role === Role.TEACHER ? '/teacher/dashboard' : '/login')} replace />} />
       </Routes>
     </HashRouter>
   );
