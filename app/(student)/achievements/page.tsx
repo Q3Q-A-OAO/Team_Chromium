@@ -137,30 +137,88 @@ const BadgeTile: React.FC<{ badge: BadgeType }> = ({ badge }) => {
 
 
 const StreakCard: React.FC<{ streak: StreakType }> = ({ streak }) => {
-    const tierColorMap: Record<Tier, string> = { none: 'text-subtext', bronze: 'text-orange-500', silver: 'text-slate-400', gold: 'text-yellow-500' };
-    const progressPercent = streak.nextThreshold ? (streak.currentCount / streak.nextThreshold) * 100 : 0;
+    // New, more cohesive color palette for tiers
+    const tierConfig = {
+        none:   { name: 'None',   color: 'var(--subtext)',    bgColor: 'bg-muted',         borderColor: 'border-muted' },
+        bronze: { name: 'Bronze', color: 'var(--teal-400)',   bgColor: 'bg-[var(--teal-400)]/10', borderColor: 'border-[var(--teal-400)]/50' },
+        silver: { name: 'Silver', color: 'var(--blue-500)',   bgColor: 'bg-[var(--blue-500)]/10', borderColor: 'border-[var(--blue-500)]/50' },
+        gold:   { name: 'Gold',   color: 'var(--mint-400)',    bgColor: 'bg-[var(--mint-400)]/10', borderColor: 'border-[var(--mint-400)]/50' },
+    };
+
+    const currentTierConfig = tierConfig[streak.currentTier];
+    const unit = streak.id.includes('daily') || streak.id.includes('savings') ? 'days' : 'times';
+
+    // Calculate overall progress for the tier track
+    const totalTiers = streak.tiers.length;
+    const currentTierIndex = streak.tiers.findIndex(t => streak.currentCount < t);
+    const nextThreshold = streak.nextThreshold || streak.tiers[totalTiers - 1];
+    const prevThreshold = currentTierIndex > 0 ? streak.tiers[currentTierIndex - 1] : 0;
+    
+    // Progress within the current tier segment
+    const progressInSegment = Math.max(0, streak.currentCount - prevThreshold);
+    const segmentTotal = nextThreshold - prevThreshold;
+    const progressPercent = segmentTotal > 0 ? (progressInSegment / segmentTotal) * 100 : (streak.currentCount >= nextThreshold ? 100 : 0);
 
     return (
-        <Card className="p-4 flex items-center gap-4">
-            <div className={`flex-shrink-0 ${tierColorMap[streak.currentTier]}`}><Flame size={32} /></div>
-            <div className="flex-grow">
-                <div className="flex justify-between items-baseline">
-                    <h3 className="font-semibold text-text">{streak.name}</h3>
-                    <div className="flex items-center gap-3">
-                        {streak.bestCount && <div className="flex items-center gap-1 text-xs text-subtext font-medium"><Trophy size={12} /><span>Best: {streak.bestCount}</span></div>}
-                        {streak.currentTier !== 'none' && <span className="text-xs font-medium uppercase">{streak.currentTier}</span>}
+        <Card className={`p-5 flex flex-col gap-4 transition-all border-2 ${currentTierConfig.borderColor} hover:shadow-xl`}>
+            {/* Header */}
+            <div className="flex items-start gap-4">
+                <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${currentTierConfig.bgColor}`}>
+                    <Flame size={28} style={{ color: currentTierConfig.color }} />
+                </div>
+                <div className="flex-grow">
+                    <h3 className="h3">{streak.name}</h3>
+                    <p className="small mt-1">{streak.description}</p>
+                </div>
+            </div>
+
+            {/* Main Stats */}
+            <div className="grid grid-cols-2 gap-4 items-end">
+                <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide" style={{ color: currentTierConfig.color }}>Current Streak</p>
+                    <div className="flex items-baseline gap-2 mt-1">
+                        <span className="h1">{streak.currentCount}</span>
+                        <span className="text-xl font-medium text-subtext capitalize">{unit}</span>
                     </div>
                 </div>
-                <p className="small mt-1">{streak.description}</p>
-                {streak.nextThreshold && streak.currentTier !== 'gold' && (
-                     <div className="mt-2">
-                        <div className="flex justify-between small mb-1">
-                            <span>Progress</span>
-                            <span>{streak.currentCount} / {streak.nextThreshold}</span>
-                        </div>
-                        <div className="w-full bg-surface rounded-full h-2 ring-1 ring-inset ring-ring"><div className="bg-blue-500 h-2 rounded-full" style={{ width: `${progressPercent}%` }}></div></div>
+                {streak.bestCount && (
+                    <div className="text-right">
+                        <p className="text-sm text-subtext">Best Streak</p>
+                        <p className="text-2xl font-semibold text-text">{streak.bestCount}</p>
                     </div>
                 )}
+            </div>
+
+            {/* Progress Bar & Tiers */}
+            <div>
+                 {streak.nextThreshold && streak.currentTier !== 'gold' && (
+                    <div className="flex justify-between items-center small mb-1.5">
+                        <span>Progress to next tier</span>
+                        <span className="font-semibold">{streak.currentCount} / {streak.nextThreshold} {unit}</span>
+                    </div>
+                )}
+                {/* Visual Progress Bar */}
+                <div className="w-full bg-muted rounded-full h-4 ring-1 ring-inset ring-black/5 relative">
+                    <div 
+                        className="h-4 rounded-full transition-all duration-500" 
+                        style={{ width: `${progressPercent}%`, backgroundColor: currentTierConfig.color }}
+                    ></div>
+                </div>
+
+                {/* Tier Markers */}
+                <div className="flex justify-between items-center mt-2 text-xs text-subtext font-medium px-1">
+                    {streak.tiers.map((tierValue) => {
+                        const isAchieved = streak.currentCount >= tierValue;
+                        return (
+                            <div key={tierValue} className="flex flex-col items-center text-center">
+                                <div className={`w-2 h-2 rounded-full mb-1 ${isAchieved ? 'bg-[var(--mint-400)]' : 'bg-muted ring-1 ring-slate-300'}`}></div>
+                                <span className={`${isAchieved ? 'text-text font-semibold' : ''}`}>
+                                    {tierValue}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </Card>
     );
@@ -257,7 +315,7 @@ const StudentAchievements: React.FC = () => {
                     <div className="flex items-center gap-2">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-subtext" />
-                            <input placeholder="Search badges..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 rounded-md bg-muted py-2 pl-9 pr-3 text-sm" />
+                            <input placeholder="Search by name or hint..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 rounded-md bg-muted py-2 pl-9 pr-3 text-sm" />
                         </div>
                         <div className="relative">
                             <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-48 appearance-none rounded-md bg-muted py-2 pl-3 pr-8 text-sm font-medium text-subtext focus:outline-none focus:ring-2 focus:ring-blue-500">

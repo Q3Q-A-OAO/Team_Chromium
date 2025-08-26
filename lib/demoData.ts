@@ -1,6 +1,25 @@
 
 import type { Badge as BadgeSummary, Streak, Badge } from '../types';
 
+// --- HELPERS FOR DYNAMIC DATES ---
+const today = new Date();
+
+// Returns an ISO string for a date a few days ago in the current month
+const dateThisMonth = (daysAgo: number) => {
+    const d = new Date();
+    d.setDate(today.getDate() - daysAgo);
+    return d.toISOString();
+}
+
+// Returns an ISO string for a date in the previous month
+const dateLastMonth = (daysAgo: number) => {
+    const d = new Date();
+    d.setMonth(today.getMonth() - 1);
+    // Adjust day to be "daysAgo" from a similar day in the last month
+    d.setDate(today.getDate() - daysAgo); 
+    return d.toISOString();
+}
+
 export const demoStudent = { 
   name:'Alex Johnson', 
   year:'Year 9', 
@@ -115,28 +134,28 @@ export const demoClassActivity = [
 // --- NEW COMPREHENSIVE ACHIEVEMENTS DATA ---
 
 export const allStreaks: Streak[] = [
-    { id: 'daily_play', name: 'Daily Play Streak', description: 'Complete at least one episode attempt each day.', tiers: [3, 7, 14, 30, 100], currentCount: 12, bestCount: 21, currentTier: 'bronze', nextThreshold: 14, earnedAt: '2025-08-22T10:00:00Z' },
+    { id: 'daily_play', name: 'Daily Play Streak', description: 'Complete at least one episode attempt each day.', tiers: [3, 7, 14, 30, 100], currentCount: 12, bestCount: 21, currentTier: 'bronze', nextThreshold: 14, earnedAt: dateThisMonth(1) },
     { id: 'weekly_consistency', name: 'Weekly Consistency', description: 'Be active at least 3 days every week.', tiers: [2, 4, 8, 12], currentCount: 3, bestCount: 3, currentTier: 'none', nextThreshold: 4 },
-    { id: 'savings_streak', name: 'Savings Streak', description: 'Finish episodes under budget consecutively.', tiers: [3, 5, 10], currentCount: 4, bestCount: 6, currentTier: 'bronze', nextThreshold: 5, earnedAt: '2025-08-21T10:00:00Z' },
+    { id: 'savings_streak', name: 'Savings Streak', description: 'Finish episodes under budget consecutively.', tiers: [3, 5, 10], currentCount: 4, bestCount: 6, currentTier: 'bronze', nextThreshold: 5, earnedAt: dateThisMonth(2) },
     { id: 'bounce_back', name: 'Bounce-Back Streak', description: 'Pass an episode you failed within 48 hours.', tiers: [1, 3, 5], currentCount: 0, currentTier: 'none', nextThreshold: 1 },
 ];
 
 export const allBadges: Badge[] = [
     // Milestones
-    { id: 'first_pound', name: 'First Pound', category: 'Milestone', state: 'earned', earnedAt: '2025-08-01T09:00:00Z', unlockHint: 'Pass your first episode.', artKey: 'milestone' },
-    { id: 'level_up', name: 'Level-Up Learner', category: 'Milestone', state: 'earned', earnedAt: '2025-08-15T11:30:00Z', unlockHint: 'Pass 10 episodes.', artKey: 'milestone' },
+    { id: 'first_pound', name: 'First Pound', category: 'Milestone', state: 'earned', earnedAt: dateLastMonth(15), unlockHint: 'Pass your first episode.', artKey: 'milestone' },
+    { id: 'level_up', name: 'Level-Up Learner', category: 'Milestone', state: 'locked', unlockHint: 'Pass 10 episodes.', artKey: 'milestone' }, // Previously earned, now locked for progression
     { id: 'marathon', name: 'Marathon Learner', category: 'Milestone', state: 'locked', unlockHint: 'Pass 25 episodes.', artKey: 'milestone' },
     // Skills
-    { id: 'value_detective', name: 'Value Detective', category: 'Skill', state: 'earned', earnedAt: '2025-08-18T14:00:00Z', unlockHint: 'Choose the best unit price 5 times.', contextStat: 'You saved £14 by comparing!', artKey: 'skill' },
+    { id: 'value_detective', name: 'Value Detective', category: 'Skill', state: 'earned', earnedAt: dateThisMonth(5), unlockHint: 'Choose the best unit price 5 times.', contextStat: 'You saved £14 by comparing!', artKey: 'skill' },
     { id: 'paycheck_pro', name: 'Paycheck Pro', category: 'Skill', state: 'locked', unlockHint: 'Decode a full payslip, including NI and tax.', artKey: 'skill' },
     { id: 'apr_unmasker', name: 'APR Unmasker', category: 'Skill', state: 'locked', unlockHint: 'Pick the cheaper loan plan 3 times.', artKey: 'skill' },
-    { id: 'risk_ranger', name: 'Risk Ranger', category: 'Skill', state: 'earned', earnedAt: '2025-08-20T16:00:00Z', unlockHint: 'Build a diversified portfolio in the Stock Market Maze.', artKey: 'skill' },
+    { id: 'risk_ranger', name: 'Risk Ranger', category: 'Skill', state: 'earned', earnedAt: dateThisMonth(2), unlockHint: 'Build a diversified portfolio in the Stock Market Maze.', artKey: 'skill' },
     // Habits
-    { id: 'goal_setter', name: 'Goal Setter', category: 'Habit', state: 'earned', earnedAt: '2025-08-07T12:00:00Z', unlockHint: 'Set and meet a weekly goal.', artKey: 'habit' },
+    { id: 'goal_setter', name: 'Goal Setter', category: 'Habit', state: 'earned', earnedAt: dateThisMonth(8), unlockHint: 'Set and meet a weekly goal.', artKey: 'habit' },
     { id: 'comeback_kid', name: 'Comeback Kid', category: 'Habit', state: 'locked', unlockHint: 'Pass an episode that you previously failed.', artKey: 'habit' },
     // Fun (Private by default)
-    { id: 'latte_factor', name: 'Latte Factor', category: 'Fun', state: 'earned', earnedAt: '2025-08-11T18:00:00Z', unlockHint: 'Oops! Blew the budget on small purchases.', isPrivate: true, artKey: 'fun' },
-    { id: 'lemonade_tycoon', name: 'Lemonade Tycoon', category: 'Fun', state: 'earned', earnedAt: '2025-08-05T13:00:00Z', unlockHint: 'Make over £20 profit in the Lemonade Stand.', isPrivate: true, artKey: 'fun' },
+    { id: 'latte_factor', name: 'Latte Factor', category: 'Fun', state: 'locked', unlockHint: 'Oops! Blew the budget on small purchases.', isPrivate: true, artKey: 'fun' }, // Previously earned, now locked
+    { id: 'lemonade_tycoon', name: 'Lemonade Tycoon', category: 'Fun', state: 'earned', earnedAt: dateLastMonth(5), unlockHint: 'Make over £20 profit in the Lemonade Stand.', isPrivate: true, artKey: 'fun' },
     { id: 'bogof_boss', name: 'BOGOF Boss', category: 'Fun', state: 'locked', unlockHint: 'Win big using multi-buy or unit-price logic.', isPrivate: true, artKey: 'fun' },
 ];
 
