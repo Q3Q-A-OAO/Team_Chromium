@@ -1,116 +1,137 @@
-// This service simulates calls to the backend AI Mentor API.
-// In a real Next.js app, this would fetch from '/api/mentor'.
-// In this SPA, we simulate the async operation and return a canned response.
+// This service connects to the Team Chromium Backend AI Mentor API.
+// It communicates with the Python LangChain agent for intelligent responses.
 
 interface MentorResponse {
   answer: string;
-  checkQuestion?: string;
   emotion?: 'idle' | 'think' | 'celebrate' | 'encourage' | 'oops';
+  card?: any;
+  ui?: {
+    emotion?: string;
+    chips?: string[];
+    intensity?: number;
+  };
 }
 
+// Backend API configuration
+const BACKEND_URL = 'http://localhost:3001';
+const API_BASE = `${BACKEND_URL}/api/mentor`;
 
-const mentorResponses: Record<string, MentorResponse> = {
-  plan: {
-    answer: `Of course! Here is a simple plan to help you save for the spaceship toy.
----
-{
-  "card": {
-    "type": "plan",
-    "title": "Spaceship Toy Savings Plan",
-    "steps": [
-      "Set aside 20% of your weekly allowance immediately.",
-      "Track every penny you spend for one week to find savings.",
-      "Do one extra chore to earn a bonus.",
-      "Review your progress at the end of the week."
-    ]
-  },
-  "ui": {
-    "emotion": "encourage",
-    "chips": ["What is a 'variable cost'?", "How do I track spending?", "Can you make this plan simpler?"]
-  }
-}`
-  },
-  quiz: {
-    answer: `Good idea, let's test your knowledge! Here is a quick question for you.
----
-{
-  "card": {
-    "type": "quiz",
-    "question": "If you buy a toy for £8 and sell it for £10, what is your profit margin?",
-    "options": ["20%", "25%", "80%"],
-    "correctOptionIndex": 0,
-    "feedback": "Correct! The profit is £2. The profit margin is (Profit / Revenue) * 100, which is (£2 / £10) * 100 = 20%."
-  },
-  "ui": {
-    "emotion": "think"
-  }
-}`
-  },
-  tip: {
-    answer: `Here's a quick tip for you based on our conversation.
----
-{
-  "card": {
-    "type": "tip",
-    "text": "The 'Pay Yourself First' principle is powerful. Before you spend on anything else, put a portion of your money into savings.",
-    "link": {
-      "label": "Try this in Play →",
-      "href": "/student/play"
+/**
+ * Ask the AI mentor a question using the backend API
+ */
+export const askMentor = async (question: string, episodeContext: string, tone: string, conversationHistory: any[] = []): Promise<MentorResponse> => {
+  console.log('🤖 Asking AI Mentor:', { question, episodeContext, tone, conversationHistory });
+  
+  try {
+    // Call the backend API
+    const response = await fetch(`${API_BASE}/ask`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question,
+        studentId: '1', // For MVP, using hardcoded student ID
+        episodeContext,
+        tone,
+        conversationHistory: conversationHistory
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status} ${response.statusText}`);
     }
-  },
-  "ui": {
-    "emotion": "celebrate",
-    "intensity": 0.5
-  }
-}`
-  },
-  progress: {
-    answer: `You've been busy! Here's a quick look at your progress this week.
----
-{
-  "card": {
-    "type": "progress",
-    "stats": {
-      "Episodes this week": 5,
-      "Time spent": "2h 15m",
-      "Best badge": "Risk Ranger"
-    }
-  },
-  "ui": {
-    "emotion": "celebrate",
-    "intensity": 0.8,
-    "chips": ["What was my hardest question?", "Show my top concepts", "Give me another quiz"]
-  }
-}`
-  },
-  default: {
-    answer: "That's a great question! When budgeting for a lemonade stand, it's crucial to list all your potential costs, like lemons, sugar, and cups. This helps you set a price that ensures you make a profit.",
-    checkQuestion: "What is one 'variable cost' you might have when running your stand?",
-    emotion: 'celebrate',
+
+    const data = await response.json();
+    console.log('✅ AI Mentor response:', data);
+    
+    return {
+      answer: data.answer || 'I apologize, but I received an empty response.',
+      emotion: data.emotion || 'idle',
+      card: data.card || null,
+      ui: data.ui || {
+        emotion: 'idle',
+        chips: ['Ask another question', 'Need help?', 'What else?']
+      }
+    };
+
+  } catch (error) {
+    console.error('❌ Error connecting to AI Mentor:', error);
+    
+    // Fallback to a helpful error message
+    return {
+      answer: `I'm having trouble connecting to my brain right now! 😅 
+
+This usually means the backend server isn't running. Please make sure:
+1. The backend server is started (npm run dev in backend folder)
+2. It's running on port 3001
+3. The Python agent is working
+
+For now, try asking me about:
+• Creating a savings plan
+• Taking a quiz
+• Getting financial tips
+• Checking your progress`,
+      emotion: 'encourage',
+      card: null,
+      ui: {
+        emotion: 'encourage',
+        chips: ['Try again', 'Check backend status', 'Need help?']
+      }
+    };
   }
 };
 
+/**
+ * Get mentor context for a student
+ */
+export const getMentorContext = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE}/context/${studentId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting mentor context:', error);
+    return null;
+  }
+};
 
-export const askMentor = async (question: string, episodeContext: string, tone: string): Promise<MentorResponse> => {
-  console.log('Asking mentor:', { question, episodeContext, tone });
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+/**
+ * Get conversation history
+ */
+export const getConversationHistory = async (studentId: string, limit: number = 50) => {
+  try {
+    const response = await fetch(`${API_BASE}/conversations/${studentId}?limit=${limit}`);
+    
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting conversation history:', error);
+    return { conversations: [] };
+  }
+};
 
-  const lowerQuestion = question.toLowerCase();
-  
-  if (lowerQuestion.includes('plan')) {
-    return mentorResponses.plan;
+/**
+ * Get mentor insights and recommendations
+ */
+export const getMentorInsights = async (studentId: string) => {
+  try {
+    const response = await fetch(`${API_BASE}/insights/${studentId}`);
+    
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting mentor insights:', error);
+    return null;
   }
-  if (lowerQuestion.includes('quiz')) {
-    return mentorResponses.quiz;
-  }
-  if (lowerQuestion.includes('tip')) {
-    return mentorResponses.tip;
-  }
-  if (lowerQuestion.includes('progress')) {
-    return mentorResponses.progress;
-  }
-  
-  return mentorResponses.default;
 };

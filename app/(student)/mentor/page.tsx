@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import Button from '../../../components/ui/Button';
-import { Send, Bot, Info, X, ChevronDown } from 'lucide-react';
 import { askMentor } from '../../../services/mentorService';
-import Card from '../../../components/ui/Card';
 import { MentorCardRenderer } from '../../../components/student/MentorCards';
 import type { CardPayload } from '../../../components/student/MentorCards';
 import MentorWindow from '../../../components/student/MentorWindow';
+import ReactMarkdown from 'react-markdown';
+import { Button } from '../../../components/ui/Button';
+import { Bot, Send, Info, ChevronDown, X } from 'lucide-react';
 
 type Emotion = 'idle' | 'think' | 'celebrate' | 'encourage' | 'oops';
 type Tone = 'Friendly' | 'Normal' | 'Formal';
@@ -88,9 +88,7 @@ const parseMentorResponse = (responseText: string) => {
 const StudentMentor: React.FC = () => {
   const [question, setQuestion] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
-    { role: 'mentor', content: 'Hello! How can I help you with your current episode? Try asking for a "plan" or a "quiz".' }
-  ]);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [emotion, setEmotion] = useState<Emotion>('idle');
   const [intensity, setIntensity] = useState<number>(0);
   const [tone, setTone] = useState<Tone>('Normal');
@@ -107,6 +105,40 @@ const StudentMentor: React.FC = () => {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatHistory, isLoading]);
+
+  // Get initial greeting from AI mentor
+  useEffect(() => {
+    const getInitialGreeting = async () => {
+      if (chatHistory.length === 0) {  // Only get greeting if no history
+        setIsLoading(true);
+        setEmotion('think');
+        
+        try {
+          const response = await askMentor('Hi!', 'Saving for a Spaceship', tone, []);
+          const { text, cardPayload, uiPayload } = parseMentorResponse(response.answer);
+          
+          const mentorMessage: ChatMessage = { role: 'mentor', content: text, card: cardPayload };
+          setChatHistory([mentorMessage]);
+          
+          if (uiPayload.chips) {
+            setQuickPrompts(uiPayload.chips);
+          }
+        } catch (error) {
+          console.error('Error getting initial greeting:', error);
+          // Fallback greeting if backend fails
+          setChatHistory([{ 
+            role: 'mentor', 
+            content: 'Hi! I\'m your AI mentor. How can I help you with your financial literacy journey today?' 
+          }]);
+        } finally {
+          setIsLoading(false);
+          setEmotion('idle');
+        }
+      }
+    };
+    
+    getInitialGreeting();
+  }, [tone, chatHistory.length]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -137,7 +169,13 @@ const StudentMentor: React.FC = () => {
     const userMessage: ChatMessage = { role: 'user', content: messageToSend };
     setChatHistory(prev => [...prev, userMessage]);
 
-    const response = await askMentor(messageToSend, 'Saving for a Spaceship', tone);
+    // Convert chat history to the format expected by the backend
+    const conversationHistory = chatHistory.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'assistant',
+      content: msg.content
+    }));
+
+    const response = await askMentor(messageToSend, 'Saving for a Spaceship', tone, conversationHistory);
     
     const { text, cardPayload, uiPayload } = parseMentorResponse(response.answer);
     
@@ -187,7 +225,7 @@ const StudentMentor: React.FC = () => {
                             {msg.role === 'mentor' && <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white"><Bot size={16} /></div>}
                             {msg.content && (
                                 <div className={`max-w-xl rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-ink' : 'bg-muted text-text'}`}>
-                                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
                                 </div>
                             )}
                         </div>
