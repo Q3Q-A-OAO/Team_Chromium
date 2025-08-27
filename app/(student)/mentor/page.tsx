@@ -1,36 +1,21 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Button from '../../../components/ui/Button';
-import { Send, Bot, Info, X, BrainCircuit, PartyPopper, ChevronDown } from 'lucide-react';
+import { Send, Bot, Info, X, ChevronDown } from 'lucide-react';
 import { askMentor } from '../../../services/mentorService';
 import Card from '../../../components/ui/Card';
+import { MentorCardRenderer } from '../../../components/student/MentorCards';
+import type { CardPayload } from '../../../components/student/MentorCards';
+import MentorWindow from '../../../components/student/MentorWindow';
 
-type Emotion = 'idle' | 'think' | 'celebrate';
+type Emotion = 'idle' | 'think' | 'celebrate' | 'encourage' | 'oops';
 type Tone = 'Friendly' | 'Normal' | 'Formal';
 
-const MentorWindow: React.FC<{ emotion: Emotion; isLoading: boolean }> = ({ emotion, isLoading }) => {
-  const statusDotColor = isLoading ? 'bg-teal-400 animate-pulse' : 'bg-mint-400';
-
-  const emotionMap: Record<Emotion, React.ReactNode> = {
-    idle: <Bot size={64} className="text-subtext" />,
-    think: <BrainCircuit size={64} className="text-blue-500 animate-pulse" />,
-    celebrate: <PartyPopper size={64} className="text-mint-400" />,
-  };
-
-  return (
-    <Card className="p-4 h-full flex flex-col items-center justify-center">
-      <div className="w-full max-w-[280px] aspect-square bg-muted rounded-lg flex items-center justify-center shadow-inner overflow-hidden">
-        <div className="transition-transform duration-500 ease-in-out" key={emotion}>
-          {emotionMap[emotion]}
-        </div>
-      </div>
-      <div className="flex items-center gap-2 mt-4">
-        <div className={`w-2.5 h-2.5 rounded-full transition-colors ${statusDotColor}`} />
-        <p className="font-semibold text-sm text-text">MoneyQuest Mentor</p>
-      </div>
-    </Card>
-  );
-};
+interface ChatMessage {
+    role: 'user' | 'mentor';
+    content: string;
+    card?: CardPayload;
+}
 
 const ContextDrawer: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ isOpen, onClose }) => {
     return (
@@ -67,27 +52,54 @@ const ContextDrawer: React.FC<{ isOpen: boolean; onClose: () => void; }> = ({ is
 };
 
 
-const StudentMentor: React.FC = () => {
-  const [question, setQuestion] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [chatHistory, setChatHistory] = useState([
-    { role: 'mentor', content: 'Hello! How can I help you with your current episode?' }
-  ]);
-  const [emotion, setEmotion] = useState<Emotion>('idle');
-  const [tone, setTone] = useState<Tone>('Normal');
-  const [isContextDrawerOpen, setIsContextDrawerOpen] = useState(false);
-  
-  const emotionTimeoutRef = useRef<number | null>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const quickPrompts = [
+const initialQuickPrompts = [
     'What did I learn this week?',
     'Give me a 3-question quiz',
     'Show my mistakes',
     'Set a savings plan',
     'Explain APR again',
-  ];
+];
+
+const parseMentorResponse = (responseText: string) => {
+    const separator = '\n---\n';
+    const parts = responseText.split(separator);
+    let text = responseText;
+    let cardPayload = null;
+    let uiPayload: { emotion?: Emotion, chips?: string[], intensity?: number } = {};
+
+    if (parts.length > 1) {
+        const potentialJson = parts.pop()!.trim();
+        try {
+            const parsed = JSON.parse(potentialJson);
+            if (parsed.card || parsed.ui) {
+                text = parts.join(separator).trim();
+                cardPayload = parsed.card || null;
+                uiPayload = parsed.ui || {};
+            }
+        } catch (e) {
+            console.warn("Could not parse JSON payload from mentor response.", e);
+        }
+    }
+
+    return { text, cardPayload, uiPayload };
+}
+
+
+const StudentMentor: React.FC = () => {
+  const [question, setQuestion] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
+    { role: 'mentor', content: 'Hello! How can I help you with your current episode? Try asking for a "plan" or a "quiz".' }
+  ]);
+  const [emotion, setEmotion] = useState<Emotion>('idle');
+  const [intensity, setIntensity] = useState<number>(0);
+  const [tone, setTone] = useState<Tone>('Normal');
+  const [isContextDrawerOpen, setIsContextDrawerOpen] = useState(false);
+  const [quickPrompts, setQuickPrompts] = useState(initialQuickPrompts);
+  
+  const emotionTimeoutRef = useRef<number | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -119,19 +131,32 @@ const StudentMentor: React.FC = () => {
     
     setIsLoading(true);
     setEmotion('think');
+    setIntensity(0);
     if (emotionTimeoutRef.current) clearTimeout(emotionTimeoutRef.current);
     
-    const userMessage = { role: 'user', content: messageToSend };
+    const userMessage: ChatMessage = { role: 'user', content: messageToSend };
     setChatHistory(prev => [...prev, userMessage]);
 
     const response = await askMentor(messageToSend, 'Saving for a Spaceship', tone);
-    const mentorMessage = { role: 'mentor', content: response.answer };
+    
+    const { text, cardPayload, uiPayload } = parseMentorResponse(response.answer);
+    
+    const mentorMessage: ChatMessage = { role: 'mentor', content: text, card: cardPayload };
+    
     setChatHistory(prev => [...prev, mentorMessage]);
     setIsLoading(false);
     
-    setEmotion(response.emotion || 'celebrate');
+    const newEmotion = uiPayload.emotion || response.emotion || 'celebrate';
+    setEmotion(newEmotion);
+    setIntensity(uiPayload.intensity || 0);
+
+    if (uiPayload.chips) {
+        setQuickPrompts(uiPayload.chips);
+    }
+    
     emotionTimeoutRef.current = window.setTimeout(() => {
       setEmotion('idle');
+      setIntensity(0);
     }, 4000);
   };
 
@@ -144,7 +169,7 @@ const StudentMentor: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 h-full">
-        <MentorWindow emotion={emotion} isLoading={isLoading} />
+        <MentorWindow emotion={emotion} intensity={intensity} isLoading={isLoading} />
 
         <section className="flex flex-col bg-surface rounded-lg shadow-soft ring-1 ring-[var(--ring)] overflow-hidden">
             <header className="p-4 border-b border-muted flex justify-between items-center flex-shrink-0">
@@ -157,11 +182,20 @@ const StudentMentor: React.FC = () => {
             
             <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 {chatHistory.map((msg, index) => (
-                    <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                        {msg.role === 'mentor' && <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white"><Bot size={16} /></div>}
-                        <div className={`max-w-xl rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-ink' : 'bg-muted text-text'}`}>
-                            <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <div key={index} className={`flex flex-col items-start gap-2 ${msg.role === 'user' ? 'items-end' : ''}`}>
+                        <div className={`flex items-start gap-3 w-full ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                            {msg.role === 'mentor' && <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white"><Bot size={16} /></div>}
+                            {msg.content && (
+                                <div className={`max-w-xl rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-ink' : 'bg-muted text-text'}`}>
+                                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                </div>
+                            )}
                         </div>
+                        {msg.card && (
+                            <div className="w-full max-w-xl ml-11">
+                                <MentorCardRenderer card={msg.card} />
+                            </div>
+                        )}
                     </div>
                 ))}
                  {isLoading && (
