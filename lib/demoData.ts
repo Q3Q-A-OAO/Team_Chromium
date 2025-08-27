@@ -1,7 +1,7 @@
 import type { Badge as BadgeSummary, Streak, Badge } from '../types';
 
 // --- HELPERS FOR DYNAMIC DATES ---
-const TODAY = new Date(2025, 9, 31); // Friday, Oct 31, 2025 is our new "today"
+const TODAY = new Date(2025, 7, 29); // Friday, Aug 29, 2025 is our new "today"
 
 // Returns an ISO string for a date relative to our fixed "today"
 const dateThisMonth = (daysAgo: number) => {
@@ -72,9 +72,9 @@ export interface DailyActivity {
 
 export const dailyActivity: DailyActivity[] = (() => {
     const activities: DailyActivity[] = [];
-    // Generate for a range around October 2025
-    const startDate = new Date(2025, 8, 1); // Start from Sep 1st
-    const endDate = new Date(2025, 10, 15); // End mid-November
+    // Generate for a range around August 2025
+    const startDate = new Date(2025, 6, 1); // Start from July 1st
+    const endDate = new Date(2025, 8, 15); // End mid-September
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
         const dateString = d.toISOString().split('T')[0];

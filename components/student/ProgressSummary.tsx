@@ -163,12 +163,12 @@ const DayDetail = ({ activity }: { activity: DailyActivity }) => {
 // --- MAIN COMPONENT ---
 
 const ProgressSummary = () => {
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 1)); // October 2025
+    const [currentDate, setCurrentDate] = useState(new Date(2025, 7, 1)); // August 2025
     const [selectedDay, setSelectedDay] = useState<string | null>(null);
     const [hoveredDay, setHoveredDay] = useState<DailyActivity | null>(null);
     const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
     const gridRef = useRef<HTMLDivElement>(null);
-    const TODAY = new Date(2025, 9, 31); // Friday, Oct 31, 2025 is "today"
+    const TODAY = new Date(2025, 7, 29); // Friday, Aug 29, 2025 is "today"
 
     const activityMap = useMemo(() => new Map(dailyActivity.map(d => [d.date, d])), []);
     const calendarGrid = useMemo(() => generateMonthGrid(currentDate), [currentDate]);
@@ -228,13 +228,23 @@ const ProgressSummary = () => {
                              )}
                             {calendarGrid.map((day, index) => {
                                 if (!day) return <div key={`empty-${index}`} />;
-
-                                const isFuture = day > TODAY;
-                                if (isFuture) {
-                                    return <div key={`future-${index}`} className="w-full h-full rounded-xl bg-muted/30" />;
-                                }
-
+                                
                                 const dateStr = day.toISOString().split('T')[0];
+                                const isFuture = day > TODAY;
+
+                                if (isFuture) {
+                                    return (
+                                        <div
+                                            key={dateStr}
+                                            className="w-full h-full flex items-center justify-center rounded-xl text-xs text-subtext/50 pointer-events-none"
+                                            aria-disabled="true"
+                                        >
+                                            {day.getDate()}
+                                        </div>
+                                    );
+                                }
+                                
+                                const isToday = dateStr === TODAY.toISOString().split('T')[0];
                                 const activity = activityMap.get(dateStr);
                                 const isSelected = selectedDay === dateStr;
                                 const attempts = activity?.attempts || 0;
@@ -248,7 +258,7 @@ const ProgressSummary = () => {
                                         onFocus={(e) => handleMouseEnter(day, e as any)}
                                         onBlur={() => setHoveredDay(null)}
                                         aria-label={`${day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${attempts} attempts`}
-                                        className={`w-full h-full flex items-center justify-center rounded-xl text-xs transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 ${getIntensityClass(attempts)} ${isSelected ? 'ring-2 ring-blue-800 ring-offset-1' : ''}`}
+                                        className={`w-full h-full flex items-center justify-center rounded-xl text-xs transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-blue-500 ${getIntensityClass(attempts)} ${isSelected ? 'ring-2 ring-blue-800 ring-offset-1' : ''} ${isToday ? 'font-bold ring-2 ring-blue-500' : ''}`}
                                     >
                                         {day.getDate()}
                                     </button>
