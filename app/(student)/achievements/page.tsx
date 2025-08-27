@@ -70,23 +70,8 @@ const BadgePopover: React.FC<{ badge: BadgeType }> = ({ badge }) => {
     );
 };
 
-const categoryColorMap: Record<BadgeCategory, 'blue' | 'teal' | 'mint' | 'muted'> = {
-  Milestone: 'blue',
-  Skill: 'teal',
-  Habit: 'mint',
-  Fun: 'muted'
-};
-
-const tierColorMap: Record<Tier, 'blue' | 'teal' | 'mint' | 'muted'> = {
-    none: 'muted',
-    bronze: 'muted',
-    silver: 'muted',
-    gold: 'blue'
-};
-
 const BadgeTile: React.FC<{ badge: BadgeType }> = ({ badge }) => {
   const isLocked = badge.state === 'locked';
-  const isNew = badge.earnedAt ? (new Date().getTime() - new Date(badge.earnedAt).getTime()) < 7 * 24 * 60 * 60 * 1000 : false;
 
   const tierRingColorMap: Record<Tier, string> = {
     none: 'ring-transparent',
@@ -100,15 +85,8 @@ const BadgeTile: React.FC<{ badge: BadgeType }> = ({ badge }) => {
     <div tabIndex={0} className="relative group flex flex-col items-center justify-start text-center p-4 rounded-lg transition-all duration-150 ease-out bg-muted hover:shadow-lg hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
       <BadgePopover badge={badge} />
       
-      {/* Tags */}
-      <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10">
-          <UIBadge variant={categoryColorMap[badge.category]} className="!text-[10px] !px-1.5 !py-0.5">{badge.category}</UIBadge>
-          {badge.tier && badge.tier !== 'none' && <UIBadge variant={tierColorMap[badge.tier]} className="!text-[10px] !px-1.5 !py-0.5 capitalize">{badge.tier}</UIBadge>}
-          {isNew && !isLocked && <UIBadge variant={'mint'} className="!text-[10px] !px-1.5 !py-0.5">New</UIBadge>}
-      </div>
-
       {/* Square Image Slot */}
-      <div className={`relative mt-4 w-[72px] h-[72px] sm:w-[96px] sm:h-[96px] lg:w-[120px] lg:h-[120px] flex-shrink-0 transition-all rounded-lg ${tierRingClass} ring-offset-2 ring-offset-muted ${isLocked ? 'grayscale' : ''}`}>
+      <div className={`relative w-[72px] h-[72px] sm:w-[96px] sm:h-[96px] lg:w-[120px] lg:h-[120px] flex-shrink-0 transition-all rounded-lg ${tierRingClass} ring-offset-2 ring-offset-muted ${isLocked ? 'grayscale' : ''}`}>
         <div className={`w-full h-full rounded-lg bg-surface flex items-center justify-center p-1 shadow-inner`}>
            {/* Placeholder */}
            <div className="w-full h-full rounded-md border border-dashed border-slate-300 flex items-center justify-center">
@@ -138,10 +116,10 @@ const BadgeTile: React.FC<{ badge: BadgeType }> = ({ badge }) => {
 
 const StreakCard: React.FC<{ streak: StreakType }> = ({ streak }) => {
     const tierConfig = {
-        none:   { name: 'None',   color: 'var(--subtext)',    bgColor: 'bg-surface',    borderColor: 'border-muted' },
-        bronze: { name: 'Bronze', color: 'var(--blue-500)',   bgColor: 'bg-blue-500/5', borderColor: 'border-blue-500/20' },
-        silver: { name: 'Silver', color: 'var(--teal-400)',   bgColor: 'bg-teal-400/5', borderColor: 'border-teal-400/20' },
-        gold:   { name: 'Gold',   color: 'var(--mint-400)',   bgColor: 'bg-mint-400/5', borderColor: 'border-mint-400/20' },
+        none:   { name: 'None',   color: 'var(--subtext)',    progressBg: 'bg-muted' },
+        bronze: { name: 'Bronze', color: 'var(--blue-500)',   progressBg: 'bg-blue-500' },
+        silver: { name: 'Silver', color: 'var(--teal-400)',   progressBg: 'bg-teal-400' },
+        gold:   { name: 'Gold',   color: 'var(--mint-400)',   progressBg: 'bg-mint-400' },
     };
 
     const currentTierConfig = tierConfig[streak.currentTier];
@@ -156,35 +134,34 @@ const StreakCard: React.FC<{ streak: StreakType }> = ({ streak }) => {
     const segmentTotal = nextThreshold - prevThreshold;
     const progressPercent = segmentTotal > 0 ? (progressInSegment / segmentTotal) * 100 : (streak.currentCount >= nextThreshold ? 100 : 0);
 
-    const badgeVariant = streak.currentTier === 'gold' 
-        ? 'mint' 
-        : streak.currentTier === 'silver' 
-        ? 'teal' 
-        : 'blue';
-
     return (
-        <div className={`p-3 rounded-lg border-2 ${currentTierConfig.borderColor} ${currentTierConfig.bgColor} flex flex-col gap-2 transition-all`}>
+        <Card className="p-4 flex flex-col gap-3">
             {/* Header */}
-            <div className="flex justify-between items-start">
+            <div className="flex items-start justify-between">
                 <div>
-                    <h4 className="font-semibold text-base text-text">{streak.name}</h4>
-                    <p className="text-xs text-subtext">{streak.description}</p>
+                    <h4 className="font-semibold text-sm text-text">{streak.name}</h4>
+                    <p className="text-xs text-subtext mt-1">{streak.description}</p>
                 </div>
                 {streak.currentTier !== 'none' && (
-                    <UIBadge variant={badgeVariant} className="capitalize">{streak.currentTier}</UIBadge>
+                    <UIBadge 
+                        variant={streak.currentTier === 'gold' ? 'mint' : streak.currentTier === 'silver' ? 'teal' : 'blue'} 
+                        className="capitalize text-xs"
+                    >
+                        {streak.currentTier}
+                    </UIBadge>
                 )}
             </div>
             
             {/* Main Stats */}
-            <div className="flex items-end justify-center gap-1.5 text-center my-1">
-                <span className="text-4xl font-bold leading-none" style={{ color: currentTierConfig.color }}>
+            <div className="flex items-baseline justify-center gap-2 text-center my-2">
+                <span className="text-3xl font-bold" style={{ color: currentTierConfig.color }}>
                     {streak.currentCount}
                 </span>
-                <span className="text-sm font-medium text-subtext pb-0.5">{unit}</span>
+                <span className="text-base font-medium text-subtext">{unit}</span>
             </div>
 
             {/* Sub Stats & Progress */}
-            <div className="w-full">
+            <div>
                 <div className="flex justify-between items-baseline text-xs text-subtext">
                     <span>Best: <span className="font-semibold text-text/90">{streak.bestCount}</span></span>
                     {streak.nextThreshold && streak.currentTier !== 'gold' && (
@@ -192,15 +169,15 @@ const StreakCard: React.FC<{ streak: StreakType }> = ({ streak }) => {
                     )}
                 </div>
                 {streak.nextThreshold && streak.currentTier !== 'gold' && (
-                    <div className="w-full bg-surface rounded-full h-2 mt-1.5 ring-1 ring-inset ring-black/5 relative">
+                    <div className="w-full bg-muted rounded-full h-2.5 mt-1.5 ring-1 ring-inset ring-black/5 relative">
                         <div 
-                            className="h-2 rounded-full transition-all duration-500" 
-                            style={{ width: `${progressPercent}%`, backgroundColor: currentTierConfig.color }}
+                            className={`h-2.5 rounded-full transition-all duration-500 ${currentTierConfig.progressBg}`}
+                            style={{ width: `${progressPercent}%` }}
                         ></div>
                     </div>
                 )}
             </div>
-        </div>
+        </Card>
     );
 };
 
@@ -277,54 +254,57 @@ const StudentAchievements: React.FC = () => {
   }, [badgeFilter, selectedTags, searchTerm, sortBy]);
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-12 lg:gap-8">
-      <section className="lg:col-start-2 lg:sticky lg:top-32 self-start">
-        <h2 className="h2 mb-6">Active Streaks</h2>
-        <div className="space-y-4">
+    <div className="space-y-12">
+      <section>
+        <h2 className="h2 mb-4">Active Streaks</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {allStreaks.map(streak => <StreakCard key={streak.id} streak={streak} />)}
         </div>
       </section>
       
-      <section className="lg:col-start-1 lg:row-start-1">
-        <h2 className="h2 mb-6">Badge Collection</h2>
-        <div className="flex flex-col gap-4 mb-4">
-            <div className="flex justify-between items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2 rounded-full bg-muted p-1">
-                    {(['all', 'earned', 'locked'] as const).map(f => (
-                        <Button key={f} variant={badgeFilter === f ? 'primary' : 'ghost'} onClick={() => setBadgeFilter(f)} className="!rounded-full !px-3 !py-1 !text-xs capitalize">{f}</Button>
+      <section>
+        <h2 className="h2 mb-4">Badge Collection</h2>
+        
+        <Card className="p-4 mb-6">
+            <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center gap-4 flex-wrap">
+                    <div className="flex items-center gap-2 rounded-full bg-muted p-1">
+                        {(['all', 'earned', 'locked'] as const).map(f => (
+                            <Button key={f} variant={badgeFilter === f ? 'primary' : 'ghost'} onClick={() => setBadgeFilter(f)} className="!rounded-full !px-3 !py-1 !text-xs capitalize">{f}</Button>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-subtext" />
+                            <input placeholder="Search badges..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 rounded-md bg-muted py-2 pl-9 pr-3 text-sm" />
+                        </div>
+                        <div className="relative">
+                            <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-48 appearance-none rounded-md bg-muted py-2 pl-3 pr-8 text-sm font-medium text-subtext focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="newest">Sort: Newest earned</option>
+                                <option value="rarest">Sort: Rarest first</option>
+                                <option value="category">Sort: Category</option>
+                                <option value="az">Sort: A → Z</option>
+                                <option value="progress">Sort: Progress to next</option>
+                            </select>
+                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtext pointer-events-none" />
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap border-t border-muted pt-4">
+                    <span className="text-sm font-medium text-subtext mr-2">Categories:</span>
+                    {badgeCategories.map(tag => (
+                        <Button 
+                            key={tag}
+                            onClick={() => handleTagToggle(tag)}
+                            variant={selectedTags.includes(tag) ? 'primary' : 'outline'}
+                            className="!rounded-full !px-3 !py-1 !text-xs"
+                        >
+                            {tag}
+                        </Button>
                     ))}
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-subtext" />
-                        <input placeholder="Search by name or hint..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-48 rounded-md bg-muted py-2 pl-9 pr-3 text-sm" />
-                    </div>
-                    <div className="relative">
-                        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="w-48 appearance-none rounded-md bg-muted py-2 pl-3 pr-8 text-sm font-medium text-subtext focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="newest">Sort: Newest earned</option>
-                            <option value="rarest">Sort: Rarest first</option>
-                            <option value="category">Sort: Category</option>
-                            <option value="az">Sort: A → Z</option>
-                            <option value="progress">Sort: Progress to next</option>
-                        </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-subtext pointer-events-none" />
-                    </div>
-                </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-medium text-subtext mr-2">Filter by Category:</span>
-                {badgeCategories.map(tag => (
-                    <Button 
-                        key={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        variant={selectedTags.includes(tag) ? 'primary' : 'outline'}
-                        className="!rounded-full !px-3 !py-1 !text-xs"
-                    >
-                        {tag}
-                    </Button>
-                ))}
-            </div>
-        </div>
+        </Card>
         
         {processedBadges.length === 0 ? (
              <div className="text-center py-10 rounded-lg bg-muted"><p className="text-subtext">No badges match your filters.</p></div>
